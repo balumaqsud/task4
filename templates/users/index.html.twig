@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1>Users</h1>
+
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label == 'error' ? 'danger' : 'success' }}">{{ message }}</div>
+        {% endfor %}
+    {% endfor %}
+
+    <form method="post" action="{{ path('app_users_actions') }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('bulk_user_action') }}">
+        <label for="action">Action</label>
+        <select id="action" name="action" required>
+            <option value="">Choose an action</option>
+            <option value="block">Block</option>
+            <option value="unblock">Unblock</option>
+            <option value="delete">Delete</option>
+            <option value="delete_unverified">Delete unverified</option>
+        </select>
+        <button type="submit">Apply</button>
+
+        <table>
+            <thead><tr><th>Select</th><th>Name</th><th>Email</th><th>Status</th></tr></thead>
+            <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td><input type="checkbox" name="ids[]" value="{{ user.id }}"></td>
+                        <td>{{ user.name }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.status }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </form>
+{% endblock %}
