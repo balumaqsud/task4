@@ -47,6 +47,7 @@ final class RegistrationController extends AbstractController
             $user->setPassword($passwordHasher->hashPassword($user, $password));
             $user->setStatus(UserStatus::UNVERIFIED);
             $user->setVerificationToken(User::getUniqIdValue());
+            $user->setVerificationTokenExpiresAt(new \DateTimeImmutable('+24 hours'));
 
             $violations = $validator->validate($user);
             if (count($violations) > 0) {

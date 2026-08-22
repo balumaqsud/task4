@@ -6,8 +6,10 @@ namespace App\Tests\Functional;
 
 use App\Entity\User;
 use App\Entity\UserStatus;
+use App\Message\RegistrationConfirmationEmail;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\Messenger\Transport\TransportInterface;
 
 final class RegistrationTest extends WebTestCase
 {
@@ -44,6 +46,31 @@ final class RegistrationTest extends WebTestCase
         self::assertSame('Alice Example', $user->getName());
         self::assertSame(UserStatus::UNVERIFIED, $user->getStatus());
         self::assertNotSame('', (string) $user->getVerificationToken());
+    }
+
+    public function testRegistrationDispatchesConfirmationMessage(): void
+    {
+        $client = $this->client;
+        $crawler = $client->request('GET', '/register');
+
+        $client->submitForm('Register', [
+            'registration_form[name]' => 'Alice Example',
+            'registration_form[email]' => 'dispatch@example.com',
+            'registration_form[password]' => 'P@ssword123',
+            'registration_form[_token]' => $crawler->filter('input[name$="[_token]"]')->attr('value'),
+        ]);
+
+        self::assertResponseRedirects('/register');
+
+        $transport = static::getContainer()->get('messenger.transport.async');
+        self::assertInstanceOf(TransportInterface::class, $transport);
+        $messages = iterator_to_array($transport->get());
+        self::assertNotEmpty($messages);
+        self::assertInstanceOf(RegistrationConfirmationEmail::class, $messages[0]->getMessage());
+
+        foreach ($messages as $envelope) {
+            $transport->ack($envelope);
+        }
     }
 
     public function testEmptyPasswordIsRejected(): void
