@@ -11,29 +11,30 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 final class RegistrationTest extends WebTestCase
 {
+    private object $client;
     private EntityManagerInterface $entityManager;
 
     protected function setUp(): void
     {
         self::ensureKernelShutdown();
-        $client = static::createClient();
+        $this->client = static::createClient();
         $this->entityManager = static::getContainer()->get(EntityManagerInterface::class);
         $this->entityManager->createQuery('DELETE FROM App\\Entity\\User')->execute();
     }
 
     public function testSuccessfulRegistration(): void
     {
-        $client = static::createClient();
+        $client = $this->client;
 
         $crawler = $client->request('GET', '/register');
         self::assertResponseIsSuccessful();
         self::assertCount(1, $crawler->filter('form'));
 
         $client->submitForm('Register', [
-            'name' => 'Alice Example',
-            'email' => 'alice@example.com',
-            'password' => 'P@ssword123',
-            '_token' => $crawler->filter('input[name="_token"]')->attr('value'),
+            'registration_form[name]' => 'Alice Example',
+            'registration_form[email]' => 'alice@example.com',
+            'registration_form[password]' => 'P@ssword123',
+            'registration_form[_token]' => $crawler->filter('input[name$="[_token]"]')->attr('value'),
         ]);
 
         self::assertResponseRedirects('/register');
@@ -47,14 +48,14 @@ final class RegistrationTest extends WebTestCase
 
     public function testEmptyPasswordIsRejected(): void
     {
-        $client = static::createClient();
+        $client = $this->client;
         $crawler = $client->request('GET', '/register');
 
         $client->submitForm('Register', [
-            'name' => 'Jane Example',
-            'email' => 'jane@example.com',
-            'password' => '',
-            '_token' => $crawler->filter('input[name="_token"]')->attr('value'),
+            'registration_form[name]' => 'Jane Example',
+            'registration_form[email]' => 'jane@example.com',
+            'registration_form[password]' => '',
+            'registration_form[_token]' => $crawler->filter('input[name$="[_token]"]')->attr('value'),
         ]);
 
         self::assertResponseIsSuccessful();
@@ -71,14 +72,14 @@ final class RegistrationTest extends WebTestCase
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
-        $client = static::createClient();
+        $client = $this->client;
         $crawler = $client->request('GET', '/register');
 
         $client->submitForm('Register', [
-            'name' => 'New User',
-            'email' => 'duplicate@example.com',
-            'password' => 'P@ssword123',
-            '_token' => $crawler->filter('input[name="_token"]')->attr('value'),
+            'registration_form[name]' => 'New User',
+            'registration_form[email]' => 'duplicate@example.com',
+            'registration_form[password]' => 'P@ssword123',
+            'registration_form[_token]' => $crawler->filter('input[name$="[_token]"]')->attr('value'),
         ]);
 
         self::assertResponseIsSuccessful();

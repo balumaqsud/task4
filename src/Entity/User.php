@@ -10,9 +10,8 @@ use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity]
-#[ORM\Table(name: 'users', uniqueConstraints: [
-    new ORM\UniqueConstraint(name: 'users_email_unique_idx', columns: ['email']),
-])]
+#[ORM\Table(name: 'users')]
+#[ORM\UniqueConstraint(name: 'users_email_unique_idx', columns: ['email'])]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
