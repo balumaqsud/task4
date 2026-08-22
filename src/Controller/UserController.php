@@ -20,7 +20,7 @@ final class UserController extends AbstractController
     public function index(Connection $connection): Response
     {
         return $this->render('users/index.html.twig', [
-            'users' => $connection->fetchAllAssociative('SELECT id, name, email, status FROM users ORDER BY id ASC'),
+            'users' => $connection->fetchAllAssociative('SELECT id, name, email, status, last_login_at FROM users ORDER BY last_login_at DESC NULLS LAST, id ASC'),
         ]);
     }
 

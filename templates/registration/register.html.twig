@@ -1,35 +1,35 @@
 {% extends 'base.html.twig' %}
 
+{% block title %}Create account{% endblock %}
+
 {% block body %}
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="card shadow-sm border-0">
-                    <div class="card-body p-4">
-                        <h1 class="h3 mb-4">Register</h1>
-
-                        {% for label, messages in app.flashes %}
-                            {% for message in messages %}
-                                <div class="alert alert-{{ label == 'error' ? 'danger' : 'success' }}">{{ message }}</div>
-                            {% endfor %}
-                        {% endfor %}
-
-                        {{ form_start(form) }}
-                            <div class="mb-3">
-                                {{ form_row(form.name, {'attr': {'class': 'form-control'}}) }}
-                            </div>
-                            <div class="mb-3">
-                                {{ form_row(form.email, {'attr': {'class': 'form-control'}}) }}
-                            </div>
-                            <div class="mb-3">
-                                {{ form_row(form.password, {'attr': {'class': 'form-control'}}) }}
-                            </div>
-                            {{ form_widget(form._token) }}
-                            {{ form_widget(form.submit, {'attr': {'class': 'btn btn-primary w-100'}}) }}
-                        {{ form_end(form, {'render_rest': false}) }}
-                    </div>
-                </div>
+    <main class="auth-page">
+        <section class="auth-panel">
+            <div class="auth-brand mb-5">THE APP</div>
+            <div class="mb-4">
+                <p class="auth-kicker mb-1">Start your journey</p>
+                <h1 class="auth-heading mb-0">Create Your Account</h1>
             </div>
-        </div>
-    </div>
+
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ label == 'error' ? 'danger' : 'success' }} d-flex gap-2 align-items-start" role="alert">
+                        <i class="bi bi-{{ label == 'error' ? 'exclamation-circle' : 'check-circle' }}" aria-hidden="true"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+
+            {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+                {{ form_row(form.name, {'row_attr': {'class': 'mb-3'}, 'label_attr': {'class': 'form-label'}, 'attr': {'class': 'form-control form-control-lg', 'autocomplete': 'name'}}) }}
+                {{ form_row(form.email, {'row_attr': {'class': 'mb-3'}, 'label_attr': {'class': 'form-label'}, 'attr': {'class': 'form-control form-control-lg', 'autocomplete': 'email'}}) }}
+                {{ form_row(form.password, {'row_attr': {'class': 'mb-4'}, 'label_attr': {'class': 'form-label'}, 'attr': {'class': 'form-control form-control-lg', 'autocomplete': 'new-password'}}) }}
+                {{ form_widget(form._token) }}
+                {{ form_widget(form.submit, {'attr': {'class': 'btn btn-primary btn-lg w-100'}}) }}
+            {{ form_end(form, {'render_rest': false}) }}
+
+            <p class="auth-links mt-5 mb-0">Already have an account? <a href="{{ path('app_login') }}" class="link-primary">Sign in</a></p>
+        </section>
+        <div class="auth-image" role="img" aria-label="Blue geometric pattern"></div>
+    </main>
 {% endblock %}

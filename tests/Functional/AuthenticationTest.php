@@ -44,6 +44,17 @@ final class AuthenticationTest extends WebTestCase
         self::assertResponseIsSuccessful();
     }
 
+    public function testLogoutEndsTheAuthenticatedSession(): void
+    {
+        $this->loginUser($this->createUser(UserStatus::ACTIVE, 'logout@example.com'));
+
+        $this->client->request('POST', '/logout');
+        self::assertResponseRedirects('/');
+
+        $this->client->request('GET', '/protected');
+        self::assertResponseRedirects('/login');
+    }
+
     public function testBlockedUserCannotLogIn(): void
     {
         $user = $this->createUser(UserStatus::BLOCKED, 'blocked@example.com');
