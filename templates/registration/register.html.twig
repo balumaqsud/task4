@@ -1,0 +1,35 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <h1 class="h3 mb-4">Register</h1>
+
+                        {% for label, messages in app.flashes %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ label == 'error' ? 'danger' : 'success' }}">{{ message }}</div>
+                            {% endfor %}
+                        {% endfor %}
+
+                        {{ form_start(form) }}
+                            <div class="mb-3">
+                                {{ form_row(form.name, {'attr': {'class': 'form-control'}}) }}
+                            </div>
+                            <div class="mb-3">
+                                {{ form_row(form.email, {'attr': {'class': 'form-control'}}) }}
+                            </div>
+                            <div class="mb-3">
+                                {{ form_row(form.password, {'attr': {'class': 'form-control'}}) }}
+                            </div>
+                            {{ form_widget(form._token) }}
+                            {{ form_widget(form.submit, {'attr': {'class': 'btn btn-primary w-100'}}) }}
+                        {{ form_end(form, {'render_rest': false}) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
