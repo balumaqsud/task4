@@ -6,9 +6,9 @@ services:
     environment:
       APP_ENV: prod
       APP_DEBUG: "0"
-      APP_SECRET: ${APP_SECRET:-c62e5bf7e0d37e4c9213fb71629fa2a8}
-      DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}?serverVersion=16&charset=utf8
-      MAILER_DSN: ${MAILER_DSN:-null://null}
+      APP_SECRET: ${APP_SECRET:?APP_SECRET is required}
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      MAILER_DSN: ${MAILER_DSN:?MAILER_DSN is required}
       MESSENGER_TRANSPORT_DSN: doctrine://default?auto_setup=0
     command: >-
       sh -c "php bin/console cache:clear --no-warmup
@@ -34,9 +34,9 @@ services:
     environment:
       APP_ENV: prod
       APP_DEBUG: "0"
-      APP_SECRET: ${APP_SECRET:-c62e5bf7e0d37e4c9213fb71629fa2a8}
-      DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}?serverVersion=16&charset=utf8
-      MAILER_DSN: ${MAILER_DSN:-null://null}
+      APP_SECRET: ${APP_SECRET:?APP_SECRET is required}
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      MAILER_DSN: ${MAILER_DSN:?MAILER_DSN is required}
       MESSENGER_TRANSPORT_DSN: doctrine://default?auto_setup=0
     command: php bin/console messenger:consume async --no-interaction --time-limit=3600
     depends_on:
@@ -45,15 +45,15 @@ services:
     restart: unless-stopped
 
   database:
-    image: postgres:${POSTGRES_VERSION:-16}-alpine
+    image: postgres:16-alpine
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-app}
-      POSTGRES_USER: ${POSTGRES_USER:-app}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     volumes:
       - database_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app} -d ${POSTGRES_DB:-app}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10
