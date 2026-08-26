@@ -53,7 +53,7 @@ final class AcceptanceTest extends WebTestCase
 
     public function testUserManagementRendersTheRequiredTableAndToolbar(): void
     {
-        $currentUser = $this->createUser('Current', 'current@example.com', null);
+        $currentUser = $this->createUser('Current', 'current@example.com', new \DateTimeImmutable('-5 minutes'));
         $this->createUserWithStatus('Unverified', 'unverified-ui@example.com', UserStatus::UNVERIFIED);
         $this->createUserWithStatus('Blocked', 'blocked-ui@example.com', UserStatus::BLOCKED);
         $this->client->loginUser($currentUser);
@@ -62,20 +62,30 @@ final class AcceptanceTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSame(
-            ['Name', 'Email', 'Last login', 'Status'],
+            ['Name', 'Email', 'Status', 'Last seen'],
             $crawler->filter('thead th:not(:first-child)')->each(static fn ($node): string => trim($node->text())),
         );
+        self::assertSame('THE APP', trim($crawler->filter('.users-brand')->text()));
+        self::assertSame('post', strtolower((string) $crawler->filter('form[action="/logout"]')->attr('method')));
+        self::assertCount(1, $crawler->filter('form[action="/logout"] input[name="_csrf_token"]'));
         self::assertSame(
             ['block', 'unblock', 'delete', 'delete_unverified'],
             $crawler->filter('#user-toolbar button[name="action"]')->each(static fn ($node): string => (string) $node->attr('value')),
         );
         self::assertSame('Block', trim($crawler->filter('button[value="block"]')->text()));
+        self::assertCount(2, $crawler->filter('#user-toolbar button.btn-outline-primary'));
+        self::assertCount(2, $crawler->filter('#user-toolbar button.btn-outline-danger'));
         self::assertCount(3, $crawler->filter('#user-toolbar button[aria-label][title][data-bs-toggle="tooltip"]'));
+        self::assertCount(1, $crawler->filter('#user-filter[type="search"][placeholder="Filter"]'));
         self::assertCount(0, $crawler->filter('tbody button'));
         self::assertCount(1, $crawler->filter(sprintf('input.user-selection[value="%d"]:not([disabled])', $currentUser->getId())));
-        self::assertSame(['ACTIVE', 'UNVERIFIED', 'BLOCKED'], array_values(array_unique(
-            $crawler->filter('.status-badge')->each(static fn ($node): string => trim($node->text())),
+        self::assertCount(1, $crawler->filter('.blocked-user input.user-selection:not([disabled])'));
+        self::assertSame(['Active', 'Unverified', 'Blocked'], array_values(array_unique(
+            $crawler->filter('.user-status')->each(static fn ($node): string => trim($node->text())),
         )));
+        self::assertCount(1, $crawler->filter('.last-seen[data-timestamp][title][data-bs-toggle="tooltip"]'));
+        self::assertCount(2, $crawler->filter('.last-seen:not([data-timestamp])'));
+        self::assertCount(1, $crawler->filter('#no-matching-users[hidden]'));
     }
 
     public function testDuplicateInsertConstraintIsTranslatedByRegistration(): void

@@ -30,6 +30,7 @@ RUN rm -rf var/cache/* var/log/* \
     else \
         composer dump-autoload --no-dev --classmap-authoritative && rm -rf tests; \
     fi \
+    && APP_SECRET=asset-build-placeholder MAILER_DSN=smtp://mailer:1025 MAILER_SENDER=no-reply@localhost php bin/console asset-map:compile \
     && mkdir -p var/cache var/log \
     && chown -R www-data:www-data var
 
