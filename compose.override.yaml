@@ -1,6 +1,27 @@
 
 services:
 ###> doctrine/doctrine-bundle ###
+  app:
+    build:
+      args:
+        INSTALL_DEV_DEPENDENCIES: "1"
+    environment:
+      DEFAULT_URI: http://localhost:${APP_PORT:-8080}
+      MAILER_DSN: smtp://mailer:1025
+      MAILER_SENDER: no-reply@localhost
+
+  worker:
+    build:
+      args:
+        INSTALL_DEV_DEPENDENCIES: "1"
+    environment:
+      DEFAULT_URI: http://localhost:${APP_PORT:-8080}
+      MAILER_DSN: smtp://mailer:1025
+      MAILER_SENDER: no-reply@localhost
+    depends_on:
+      mailer:
+        condition: service_healthy
+
   database:
     ports:
       - "5432"
@@ -10,8 +31,7 @@ services:
   mailer:
     image: axllent/mailpit
     ports:
-      - "1025"
-      - "8025"
+      - "8025:8025"
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1

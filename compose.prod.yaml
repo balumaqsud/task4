@@ -9,6 +9,7 @@ services:
       APP_SECRET: ${APP_SECRET:?APP_SECRET is required}
       DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
       MAILER_DSN: ${MAILER_DSN:?MAILER_DSN is required}
+      MAILER_SENDER: ${MAILER_SENDER:?MAILER_SENDER is required}
       MESSENGER_TRANSPORT_DSN: doctrine://default?auto_setup=0
     command: >-
       sh -c "php bin/console cache:clear --no-warmup
@@ -37,6 +38,7 @@ services:
       APP_SECRET: ${APP_SECRET:?APP_SECRET is required}
       DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
       MAILER_DSN: ${MAILER_DSN:?MAILER_DSN is required}
+      MAILER_SENDER: ${MAILER_SENDER:?MAILER_SENDER is required}
       MESSENGER_TRANSPORT_DSN: doctrine://default?auto_setup=0
     command: php bin/console messenger:consume async --no-interaction --time-limit=3600
     depends_on:

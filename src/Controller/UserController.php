@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,7 +27,12 @@ final class UserController extends AbstractController
     }
 
     #[Route('/users/actions', name: 'app_users_actions', methods: ['POST'])]
-    public function actions(Request $request, Connection $connection, CsrfTokenManagerInterface $csrfTokenManager): Response
+    public function actions(
+        Request $request,
+        Connection $connection,
+        CsrfTokenManagerInterface $csrfTokenManager,
+        LoggerInterface $logger,
+    ): Response
     {
         $this->validateCsrf($request, $csrfTokenManager);
         $input = $this->readActionInput($request);
@@ -34,11 +41,17 @@ final class UserController extends AbstractController
         }
 
         [$action, $ids] = $input;
-        if (!$this->usersExist($connection, $ids)) {
-            return $this->invalidSelection('One or more selected users do not exist.');
-        }
+        try {
+            if (!$this->usersExist($connection, $ids)) {
+                return $this->invalidSelection('One or more selected users do not exist.');
+            }
 
-        $count = $this->executeAction($connection, $action, $ids);
+            $count = $this->executeAction($connection, $action, $ids);
+        } catch (Exception $exception) {
+            $logger->error('Bulk user action failed.', ['exception' => $exception, 'action' => $action]);
+
+            return $this->operationFailed();
+        }
 
         return $this->actionCompleted($count, $action);
     }
@@ -53,6 +66,7 @@ final class UserController extends AbstractController
 
     private function readActionInput(Request $request): ?array
     {
+        // Nota bene: action names and IDs must be validated server-side before building SQL placeholders.
         $action = $request->request->get('action');
         $ids = $request->request->all('ids');
         if (!is_string($action) || !in_array($action, self::ACTIONS, true) || !is_array($ids) || $ids === []) {
@@ -123,6 +137,13 @@ final class UserController extends AbstractController
             'delete_unverified' => 'unverified users deleted',
         ];
         $this->addFlash('success', sprintf('%d user(s) %s.', $count, $labels[$action]));
+
+        return $this->redirectToRoute('app_users');
+    }
+
+    private function operationFailed(): Response
+    {
+        $this->addFlash('error', 'The operation failed. Please try again.');
 
         return $this->redirectToRoute('app_users');
     }

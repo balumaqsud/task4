@@ -4,7 +4,6 @@
 .phpunit.cache/
 var/
 vendor/
-tests/
 .env.local
 .env.*.local
 compose*.yaml

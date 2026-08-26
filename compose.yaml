@@ -8,7 +8,8 @@ services:
       APP_DEBUG: "0"
       APP_SECRET: ${APP_SECRET:-c62e5bf7e0d37e4c9213fb71629fa2a8}
       DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}?serverVersion=16&charset=utf8
-      MAILER_DSN: ${MAILER_DSN:-null://null}
+      MAILER_DSN: ${MAILER_DSN:-smtp://mailer:1025}
+      MAILER_SENDER: ${MAILER_SENDER:-no-reply@localhost}
       MESSENGER_TRANSPORT_DSN: doctrine://default?auto_setup=0
     command: >-
       sh -c "php bin/console cache:clear --no-warmup
@@ -36,7 +37,8 @@ services:
       APP_DEBUG: "0"
       APP_SECRET: ${APP_SECRET:-c62e5bf7e0d37e4c9213fb71629fa2a8}
       DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}?serverVersion=16&charset=utf8
-      MAILER_DSN: ${MAILER_DSN:-null://null}
+      MAILER_DSN: ${MAILER_DSN:-smtp://mailer:1025}
+      MAILER_SENDER: ${MAILER_SENDER:-no-reply@localhost}
       MESSENGER_TRANSPORT_DSN: doctrine://default?auto_setup=0
     command: php bin/console messenger:consume async --no-interaction --time-limit=3600
     depends_on:

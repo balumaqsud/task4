@@ -51,6 +51,33 @@ final class AcceptanceTest extends WebTestCase
         $connection->insert('users', $this->userRow('unique@example.com'));
     }
 
+    public function testUserManagementRendersTheRequiredTableAndToolbar(): void
+    {
+        $currentUser = $this->createUser('Current', 'current@example.com', null);
+        $this->createUserWithStatus('Unverified', 'unverified-ui@example.com', UserStatus::UNVERIFIED);
+        $this->createUserWithStatus('Blocked', 'blocked-ui@example.com', UserStatus::BLOCKED);
+        $this->client->loginUser($currentUser);
+
+        $crawler = $this->client->request('GET', '/users');
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(
+            ['Name', 'Email', 'Last login', 'Status'],
+            $crawler->filter('thead th:not(:first-child)')->each(static fn ($node): string => trim($node->text())),
+        );
+        self::assertSame(
+            ['block', 'unblock', 'delete', 'delete_unverified'],
+            $crawler->filter('#user-toolbar button[name="action"]')->each(static fn ($node): string => (string) $node->attr('value')),
+        );
+        self::assertSame('Block', trim($crawler->filter('button[value="block"]')->text()));
+        self::assertCount(3, $crawler->filter('#user-toolbar button[aria-label][title][data-bs-toggle="tooltip"]'));
+        self::assertCount(0, $crawler->filter('tbody button'));
+        self::assertCount(1, $crawler->filter(sprintf('input.user-selection[value="%d"]:not([disabled])', $currentUser->getId())));
+        self::assertSame(['ACTIVE', 'UNVERIFIED', 'BLOCKED'], array_values(array_unique(
+            $crawler->filter('.status-badge')->each(static fn ($node): string => trim($node->text())),
+        )));
+    }
+
     public function testDuplicateInsertConstraintIsTranslatedByRegistration(): void
     {
         $user = new User();
@@ -80,7 +107,12 @@ final class AcceptanceTest extends WebTestCase
         $this->entityManager->flush();
         $mailer = $this->createMock(MailerInterface::class);
         $mailer->expects(self::once())->method('send')->with(self::callback(static function ($email): bool {
-            return $email instanceof TemplatedEmail && $email->getTo()[0]->getAddress() === 'confirm@example.com';
+            return $email instanceof TemplatedEmail
+                && $email->getTo()[0]->getAddress() === 'confirm@example.com'
+                && $email->getFrom() === []
+                && $email->getSubject() === 'Confirm your account'
+                && $email->getHtmlTemplate() === 'registration/confirmation_email.html.twig'
+                && str_contains((string) $email->getContext()['confirmationUrl'], '/register/confirm/confirmation-token');
         }));
         $handler = new RegistrationConfirmationEmailHandler(
             $this->entityManager,
@@ -93,11 +125,16 @@ final class AcceptanceTest extends WebTestCase
 
     private function createUser(string $name, string $email, ?\DateTimeImmutable $lastLoginAt): User
     {
+        return $this->createUserWithStatus($name, $email, UserStatus::ACTIVE, $lastLoginAt);
+    }
+
+    private function createUserWithStatus(string $name, string $email, UserStatus $status, ?\DateTimeImmutable $lastLoginAt = null): User
+    {
         $user = new User();
         $user->setName($name);
         $user->setEmail($email);
         $user->setPassword('hashed-password');
-        $user->setStatus(UserStatus::ACTIVE);
+        $user->setStatus($status);
         $user->setLastLoginAt($lastLoginAt);
         $this->entityManager->persist($user);
         $this->entityManager->flush();

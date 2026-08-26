@@ -35,6 +35,28 @@ final class AuthenticationTest extends WebTestCase
         self::assertResponseIsSuccessful();
     }
 
+    public function testUnauthenticatedUserCannotAccessUserManagement(): void
+    {
+        $this->client->request('GET', '/users');
+
+        self::assertResponseRedirects('/login');
+    }
+
+    public function testDirectLoginRedirectsToUserManagementAndRecordsLastLogin(): void
+    {
+        $user = $this->createUser(UserStatus::ACTIVE, 'direct-login@example.com');
+
+        $this->submitLogin($user->getEmail());
+
+        self::assertResponseRedirects('/users');
+        $this->client->followRedirect();
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('table tbody');
+
+        $this->entityManager->clear();
+        self::assertNotNull($this->entityManager->find(User::class, $user->getId())?->getLastLoginAt());
+    }
+
     public function testUnverifiedUserCanAccessProtectedRoute(): void
     {
         $this->loginUser($this->createUser(UserStatus::UNVERIFIED, 'unverified@example.com'));
@@ -44,15 +66,36 @@ final class AuthenticationTest extends WebTestCase
         self::assertResponseIsSuccessful();
     }
 
+    public function testUnverifiedUserCanLogInWithOneCharacterPassword(): void
+    {
+        $user = $this->createUser(UserStatus::UNVERIFIED, 'one-character@example.com', 'x');
+
+        $this->submitLogin($user->getEmail(), 'x');
+
+        self::assertResponseRedirects('/users');
+    }
+
     public function testLogoutEndsTheAuthenticatedSession(): void
     {
         $this->loginUser($this->createUser(UserStatus::ACTIVE, 'logout@example.com'));
 
-        $this->client->request('POST', '/logout');
-        self::assertResponseRedirects('/');
+        $crawler = $this->client->request('GET', '/users');
+        $token = $crawler->filter('form[action="/logout"] input[name="_csrf_token"]')->attr('value');
+
+        $this->client->request('POST', '/logout', ['_csrf_token' => $token]);
+        self::assertResponseRedirects('/login');
 
         $this->client->request('GET', '/protected');
         self::assertResponseRedirects('/login');
+    }
+
+    public function testLogoutRejectsAnInvalidCsrfToken(): void
+    {
+        $this->loginUser($this->createUser(UserStatus::ACTIVE, 'logout-csrf@example.com'));
+
+        $this->client->request('POST', '/logout', ['_csrf_token' => 'invalid-token']);
+
+        self::assertResponseStatusCodeSame(403);
     }
 
     public function testBlockedUserCannotLogIn(): void
@@ -93,13 +136,13 @@ final class AuthenticationTest extends WebTestCase
         self::assertResponseRedirects('/login');
     }
 
-    private function createUser(UserStatus $status, string $email): User
+    private function createUser(UserStatus $status, string $email, string $plainPassword = 'P@ssword123'): User
     {
         $user = new User();
         $user->setName('Test User');
         $user->setEmail($email);
         $user->setStatus($status);
-        $user->setPassword($this->passwordHasher->hashPassword($user, 'P@ssword123'));
+        $user->setPassword($this->passwordHasher->hashPassword($user, $plainPassword));
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
@@ -114,12 +157,12 @@ final class AuthenticationTest extends WebTestCase
         self::assertResponseRedirects('/protected');
     }
 
-    private function submitLogin(string $email): void
+    private function submitLogin(string $email, string $password = 'P@ssword123'): void
     {
         $crawler = $this->client->request('GET', '/login');
         $this->client->submitForm('Login', [
             '_username' => $email,
-            '_password' => 'P@ssword123',
+            '_password' => $password,
             '_csrf_token' => $crawler->filter('input[name="_csrf_token"]')->attr('value'),
         ]);
     }

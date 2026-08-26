@@ -92,6 +92,24 @@ final class RegistrationTest extends WebTestCase
         self::assertSelectorTextContains('html', 'Password is required.');
     }
 
+    public function testOneCharacterPasswordIsAcceptedAndHashed(): void
+    {
+        $crawler = $this->client->request('GET', '/register');
+
+        $this->client->submitForm('Register', [
+            'registration_form[name]' => 'Short Password',
+            'registration_form[email]' => 'short-password@example.com',
+            'registration_form[password]' => 'x',
+            'registration_form[_token]' => $crawler->filter('input[name$="[_token]"]')->attr('value'),
+        ]);
+
+        self::assertResponseRedirects('/register');
+        $user = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'short-password@example.com']);
+        self::assertNotNull($user);
+        self::assertSame(UserStatus::UNVERIFIED, $user->getStatus());
+        self::assertTrue($this->passwordHasher->isPasswordValid($user, 'x'));
+    }
+
     public function testDuplicateEmailIsHandledByDatabaseConstraint(): void
     {
         $user = new User();

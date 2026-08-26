@@ -58,6 +58,7 @@ final class RegistrationController extends AbstractController
                 return $this->render('registration/register.html.twig', ['form' => $form->createView()]);
             }
 
+            // Important: PostgreSQL's unique index is authoritative; never pre-check email availability.
             try {
                 $entityManager->persist($user);
                 $entityManager->flush();

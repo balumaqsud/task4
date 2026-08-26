@@ -5,6 +5,7 @@
         <div class="container page-shell">
             <a class="navbar-brand fw-semibold" href="{{ path('app_users') }}"><i class="bi bi-people-fill text-primary me-2" aria-hidden="true"></i>User management</a>
             <form method="post" action="{{ path('app_logout') }}">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
                 <button class="btn btn-outline-secondary btn-sm" type="submit" title="Sign out" data-bs-toggle="tooltip" aria-label="Sign out"><i class="bi bi-box-arrow-right" aria-hidden="true"></i><span class="d-none d-sm-inline ms-2">Sign out</span></button>
             </form>
         </div>
@@ -31,18 +32,17 @@
 
         <form method="post" action="{{ path('app_users_actions') }}">
             <input type="hidden" name="_token" value="{{ csrf_token('bulk_user_action') }}">
-            <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-                <div class="input-group" style="max-width: 360px;">
-                    <label class="input-group-text" for="action"><i class="bi bi-lightning-charge" aria-hidden="true"></i><span class="visually-hidden">Bulk action</span></label>
-                    <select class="form-select" id="action" name="action" required>
-                        <option value="">Choose an action</option>
-                        <option value="block">Block selected</option>
-                        <option value="unblock">Unblock selected</option>
-                        <option value="delete">Delete selected</option>
-                        <option value="delete_unverified">Delete unverified</option>
-                    </select>
-                </div>
-                <button class="btn btn-primary" type="submit" title="Apply selected action" data-bs-toggle="tooltip"><i class="bi bi-check2-circle me-1" aria-hidden="true"></i>Apply</button>
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3" id="user-toolbar" aria-label="User actions">
+                <button class="btn btn-outline-danger bulk-action" type="submit" name="action" value="block" disabled>Block</button>
+                <button class="btn btn-outline-success bulk-action" type="submit" name="action" value="unblock" title="Unblock selected users" data-bs-toggle="tooltip" aria-label="Unblock selected users" disabled>
+                    <i class="bi bi-unlock" aria-hidden="true"></i>
+                </button>
+                <button class="btn btn-outline-danger bulk-action" type="submit" name="action" value="delete" title="Delete selected users" data-bs-toggle="tooltip" aria-label="Delete selected users" disabled>
+                    <i class="bi bi-trash" aria-hidden="true"></i>
+                </button>
+                <button class="btn btn-outline-warning bulk-action" type="submit" name="action" value="delete_unverified" title="Delete selected unverified users" data-bs-toggle="tooltip" aria-label="Delete selected unverified users" disabled>
+                    <i class="bi bi-person-x" aria-hidden="true"></i>
+                </button>
             </div>
 
             <div class="table-shell">
@@ -52,8 +52,8 @@
                             <th scope="col" class="ps-3"><input class="form-check-input" type="checkbox" id="select-all" title="Select all users" data-bs-toggle="tooltip" aria-label="Select all users"></th>
                             <th scope="col">Name</th>
                             <th scope="col">Email</th>
-                            <th scope="col">Status</th>
                             <th scope="col">Last login</th>
+                            <th scope="col">Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -62,8 +62,8 @@
                                 <td class="ps-3"><input class="form-check-input user-selection" type="checkbox" name="ids[]" value="{{ user.id }}" aria-label="Select {{ user.name }}"></td>
                                 <td class="fw-medium">{{ user.name }}</td>
                                 <td class="text-secondary">{{ user.email }}</td>
-                                <td><span class="badge status-badge text-bg-{{ user.status == 'BLOCKED' ? 'danger' : (user.status == 'ACTIVE' ? 'success' : 'warning') }}">{{ user.status|lower|capitalize }}</span></td>
                                 <td class="text-secondary">{{ user.last_login_at ? user.last_login_at|date('M j, Y, g:i a') : 'Never' }}</td>
+                                <td><span class="badge status-badge text-bg-{{ user.status == 'BLOCKED' ? 'danger' : (user.status == 'ACTIVE' ? 'success' : 'warning') }}">{{ user.status }}</span></td>
                             </tr>
                         {% else %}
                             <tr><td class="text-center text-secondary py-5" colspan="5">No users found.</td></tr>
@@ -73,10 +73,4 @@
             </div>
         </form>
     </main>
-
-    <script>
-        document.getElementById('select-all')?.addEventListener('change', function () {
-            document.querySelectorAll('.user-selection').forEach((checkbox) => checkbox.checked = this.checked);
-        });
-    </script>
 {% endblock %}

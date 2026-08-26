@@ -34,6 +34,7 @@ final class RegistrationConfirmationTest extends WebTestCase
         $confirmedUser = $this->entityManager->find(User::class, $user->getId());
         self::assertSame(UserStatus::ACTIVE, $confirmedUser->getStatus());
         self::assertNull($confirmedUser->getVerificationToken());
+        self::assertNull($confirmedUser->getVerificationTokenExpiresAt());
     }
 
     public function testInvalidConfirmationTokenIsRejected(): void
@@ -41,6 +42,15 @@ final class RegistrationConfirmationTest extends WebTestCase
         $client = $this->client;
 
         $client->request('GET', '/register/confirm/not-found');
+
+        self::assertResponseStatusCodeSame(400);
+    }
+
+    public function testExpiredConfirmationTokenIsRejected(): void
+    {
+        $this->createUserWithExpiry(new \DateTimeImmutable('-1 minute'), 'expired-token');
+
+        $this->client->request('GET', '/register/confirm/expired-token');
 
         self::assertResponseStatusCodeSame(400);
     }
@@ -56,9 +66,16 @@ final class RegistrationConfirmationTest extends WebTestCase
         $this->entityManager->clear();
         $blockedUser = $this->entityManager->find(User::class, $user->getId());
         self::assertSame(UserStatus::BLOCKED, $blockedUser->getStatus());
+        self::assertNull($blockedUser->getVerificationToken());
+        self::assertNull($blockedUser->getVerificationTokenExpiresAt());
     }
 
     private function createUser(UserStatus $status, string $token): User
+    {
+        return $this->createUserWithExpiry(new \DateTimeImmutable('+1 hour'), $token, $status);
+    }
+
+    private function createUserWithExpiry(\DateTimeImmutable $expiresAt, string $token, UserStatus $status = UserStatus::UNVERIFIED): User
     {
         $user = new User();
         $user->setName('Test User');
@@ -66,7 +83,7 @@ final class RegistrationConfirmationTest extends WebTestCase
         $user->setPassword('hashed-password');
         $user->setStatus($status);
         $user->setVerificationToken($token);
-        $user->setVerificationTokenExpiresAt(new \DateTimeImmutable('+1 hour'));
+        $user->setVerificationTokenExpiresAt($expiresAt);
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 

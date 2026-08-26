@@ -17,6 +17,8 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 final class CurrentUserCheckerSubscriber implements EventSubscriberInterface
 {
+    private const PUBLIC_ROUTES = ['app_login', 'app_register', 'app_confirm_registration'];
+
     public function __construct(
         private readonly TokenStorageInterface $tokenStorage,
         private readonly Connection $connection,
@@ -31,7 +33,7 @@ final class CurrentUserCheckerSubscriber implements EventSubscriberInterface
 
     public function checkCurrentUser(RequestEvent $event): void
     {
-        if (!$event->isMainRequest() || $event->getRequest()->attributes->get('_route') === 'app_login') {
+        if (!$event->isMainRequest() || in_array($event->getRequest()->attributes->get('_route'), self::PUBLIC_ROUTES, true)) {
             return;
         }
 
@@ -41,6 +43,7 @@ final class CurrentUserCheckerSubscriber implements EventSubscriberInterface
             return;
         }
 
+        // Note: session user data can be stale after another request blocks or deletes the row.
         $status = $this->connection->fetchOne(
             'SELECT status FROM users WHERE id = :id',
             ['id' => $authenticatedUser->getId()],

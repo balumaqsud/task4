@@ -20,4 +20,5 @@
 ###< symfony/asset-mapper ###
 ###> markdown ###
 *.md
+!README.md
 ###< markdown ###

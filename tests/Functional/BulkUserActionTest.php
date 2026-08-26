@@ -33,6 +33,8 @@ final class BulkUserActionTest extends WebTestCase
 
         self::assertResponseRedirects('/users');
         self::assertSame(2, $this->countWithStatus(UserStatus::BLOCKED, $users));
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.alert-success', '2 user(s) blocked.');
     }
 
     public function testUnblocksMultipleUsers(): void
@@ -75,6 +77,8 @@ final class BulkUserActionTest extends WebTestCase
 
         self::assertResponseRedirects('/users');
         self::assertSame(UserStatus::ACTIVE, $this->entityManager->find(User::class, $user->getId())->getStatus());
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.alert-danger', 'Invalid bulk action or selection.');
     }
 
     public function testRejectsInvalidIds(): void
@@ -82,6 +86,27 @@ final class BulkUserActionTest extends WebTestCase
         $this->submitAction('block', ['not-an-id']);
 
         self::assertResponseRedirects('/users');
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.alert-danger', 'Invalid bulk action or selection.');
+    }
+
+    public function testRejectsNonexistentIds(): void
+    {
+        $this->submitAction('block', ['999999999']);
+
+        self::assertResponseRedirects('/users');
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.alert-danger', 'One or more selected users do not exist.');
+    }
+
+    public function testDatabaseFailureShowsSafeFeedback(): void
+    {
+        $this->submitAction('block', [(string) PHP_INT_MAX]);
+
+        self::assertResponseRedirects('/users');
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.alert-danger', 'The operation failed. Please try again.');
+        self::assertSelectorTextNotContains('body', 'SQLSTATE');
     }
 
     public function testRejectsInvalidCsrfToken(): void

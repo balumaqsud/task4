@@ -34,7 +34,6 @@ final class RegistrationConfirmationEmailHandler
         ], UrlGeneratorInterface::ABSOLUTE_URL);
 
         $email = (new TemplatedEmail())
-            ->from('no-reply@example.com')
             ->to($user->getEmail())
             ->subject('Confirm your account')
             ->htmlTemplate('registration/confirmation_email.html.twig')
