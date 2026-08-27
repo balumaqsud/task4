@@ -119,7 +119,7 @@ final class AcceptanceTest extends WebTestCase
         $mailer->expects(self::once())->method('send')->with(self::callback(static function ($email): bool {
             return $email instanceof TemplatedEmail
                 && $email->getTo()[0]->getAddress() === 'confirm@example.com'
-                && $email->getFrom() === []
+                && $email->getFrom()[0]->getAddress() === 'no-reply@example.com'
                 && $email->getSubject() === 'Confirm your account'
                 && $email->getHtmlTemplate() === 'registration/confirmation_email.html.twig'
                 && str_contains((string) $email->getContext()['confirmationUrl'], '/register/confirm/confirmation-token');
@@ -128,6 +128,8 @@ final class AcceptanceTest extends WebTestCase
             $this->entityManager,
             $mailer,
             static::getContainer()->get('router.default'),
+            static::getContainer()->get('logger'),
+            'no-reply@example.com',
         );
 
         $handler(new RegistrationConfirmationEmail($user->getId()));

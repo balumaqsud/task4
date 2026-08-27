@@ -108,7 +108,7 @@ final class UserController extends AbstractController
         $placeholders = $this->placeholders($ids);
         $sql = match ($action) {
             'block' => "UPDATE users SET status = 'BLOCKED' WHERE id IN ($placeholders)",
-            'unblock' => "UPDATE users SET status = 'ACTIVE' WHERE status = 'BLOCKED' AND id IN ($placeholders)",
+            'unblock' => "UPDATE users SET status = CASE WHEN verification_token IS NOT NULL THEN 'UNVERIFIED' ELSE 'ACTIVE' END WHERE status = 'BLOCKED' AND id IN ($placeholders)",
             'delete' => "DELETE FROM users WHERE id IN ($placeholders)",
             'delete_unverified' => "DELETE FROM users WHERE status = 'UNVERIFIED' AND id IN ($placeholders)",
         };

@@ -47,6 +47,21 @@ final class BulkUserActionTest extends WebTestCase
         self::assertSame(2, $this->countWithStatus(UserStatus::ACTIVE, $users));
     }
 
+    public function testUnblockRestoresUnverifiedWhenConfirmationTokenIsPresent(): void
+    {
+        $unverifiedBlocked = $this->createUser(UserStatus::BLOCKED, 'unverified-blocked@example.com');
+        $unverifiedBlocked->setVerificationToken('pending-token');
+        $verifiedBlocked = $this->createUser(UserStatus::BLOCKED, 'verified-blocked@example.com');
+        $this->entityManager->flush();
+
+        $this->submitAction('unblock', [$unverifiedBlocked, $verifiedBlocked]);
+
+        self::assertResponseRedirects('/users');
+        $this->entityManager->clear();
+        self::assertSame(UserStatus::UNVERIFIED, $this->entityManager->find(User::class, $unverifiedBlocked->getId())?->getStatus());
+        self::assertSame(UserStatus::ACTIVE, $this->entityManager->find(User::class, $verifiedBlocked->getId())?->getStatus());
+    }
+
     public function testDeletesMultipleUsers(): void
     {
         $users = [$this->createUser(UserStatus::ACTIVE, 'one@example.com'), $this->createUser(UserStatus::UNVERIFIED, 'two@example.com')];

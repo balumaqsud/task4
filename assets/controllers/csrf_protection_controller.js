@@ -32,6 +32,11 @@ export function generateCsrfToken (formElement) {
     let csrfCookie = csrfField.getAttribute('data-csrf-protection-cookie-value');
     let csrfToken = csrfField.value;
 
+    // Session CSRF ids for login/logout must not be turned into double-submit cookies.
+    if (csrfToken === 'authenticate' || csrfToken === 'logout') {
+        return;
+    }
+
     if (!csrfCookie && nameCheck.test(csrfToken)) {
         csrfField.setAttribute('data-csrf-protection-cookie-value', csrfCookie = csrfToken);
         csrfField.defaultValue = csrfToken = btoa(String.fromCharCode.apply(null, (window.crypto || window.msCrypto).getRandomValues(new Uint8Array(18))));

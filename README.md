@@ -7,13 +7,13 @@ Symfony 7.4 user management application for PHP 8.4.
 1. Copy [`.env.local.example`](.env.local.example) to `.env.local` and set a Gmail app password (`MAILER_DSN`, `MAILER_SENDER`, `DEFAULT_URI`).
 2. Start PostgreSQL (Docker database service is enough: `docker compose up -d database`).
 3. Start the app: `symfony server:start`.
-4. Consume confirmation emails in a second terminal:
+4. Consume confirmation emails in a **second** terminal. Registration only queues the message; nothing is sent until this worker is running:
 
 ```bash
 php bin/console messenger:consume async -vv
 ```
 
-Confirmation mail is queued in `messenger_messages` and is only sent while the worker is running.
+Without the worker, users stay Unverified and no confirmation mail is delivered.
 
 ## Docker Compose
 
@@ -35,9 +35,11 @@ docker compose exec -e APP_ENV=test app php bin/phpunit
 
 Set these on the service:
 
-- `MAILER_DSN` — Gmail SMTP with an app password
-- `MAILER_SENDER` — the same Gmail address
+- `MAILER_DSN` — `gmail+smtp://you%40gmail.com:APP_PASSWORD@default` (App Password, encode `@` as `%40`)
+- `MAILER_SENDER` — the same Gmail address (this is the From address, not the recipient)
 - `DEFAULT_URI` — `https://<your-web-service>.onrender.com`
+
+Confirmation mail is sent **to** the address entered on the registration form.
 
 A dedicated worker service requires a paid Render plan.
 
