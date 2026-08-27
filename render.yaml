@@ -1,0 +1,59 @@
+services:
+  - type: web
+    name: user-management-web
+    runtime: docker
+    plan: free
+    healthCheckPath: /login
+    envVars:
+      - key: APP_ENV
+        value: prod
+      - key: APP_DEBUG
+        value: "0"
+      - key: APP_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: user-management-db
+          property: connectionString
+      - key: MESSENGER_TRANSPORT_DSN
+        value: doctrine://default?auto_setup=0
+      - key: MAILER_DSN
+        sync: false
+      - key: MAILER_SENDER
+        sync: false
+      - key: DEFAULT_URI
+        sync: false
+
+  - type: worker
+    name: user-management-worker
+    runtime: docker
+    plan: free
+    dockerCommand: entrypoint.sh worker
+    envVars:
+      - key: APP_ENV
+        value: prod
+      - key: APP_DEBUG
+        value: "0"
+      - key: APP_SECRET
+        fromService:
+          name: user-management-web
+          type: web
+          envVarKey: APP_SECRET
+      - key: DATABASE_URL
+        fromDatabase:
+          name: user-management-db
+          property: connectionString
+      - key: MESSENGER_TRANSPORT_DSN
+        value: doctrine://default?auto_setup=0
+      - key: MAILER_DSN
+        sync: false
+      - key: MAILER_SENDER
+        sync: false
+      - key: DEFAULT_URI
+        sync: false
+
+databases:
+  - name: user-management-db
+    plan: free
+    databaseName: app
+    user: app

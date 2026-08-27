@@ -23,6 +23,8 @@ RUN if [ "$INSTALL_DEV_DEPENDENCIES" = "1" ]; then \
 
 COPY . .
 COPY docker/apache-vhost.conf /etc/apache2/sites-available/000-default.conf
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 RUN rm -rf var/cache/* var/log/* \
     && if [ "$INSTALL_DEV_DEPENDENCIES" = "1" ]; then \
@@ -36,4 +38,4 @@ RUN rm -rf var/cache/* var/log/* \
 
 EXPOSE 80
 
-CMD ["apache2-foreground"]
+CMD ["entrypoint.sh", "web"]

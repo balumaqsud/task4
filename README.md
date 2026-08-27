@@ -1,26 +1,27 @@
 # User Management
 
-Symfony 7.4 user management application for PHP 8.4. Docker Compose is the supported development runtime.
+Symfony 7.4 user management application for PHP 8.4.
 
-## Development
+## Local development (`symfony server`)
 
-Start the application, PostgreSQL, asynchronous Messenger worker, and Mailpit:
+1. Copy [`.env.local.example`](.env.local.example) to `.env.local` and set a Gmail app password (`MAILER_DSN`, `MAILER_SENDER`, `DEFAULT_URI`).
+2. Start PostgreSQL (Docker database service is enough: `docker compose up -d database`).
+3. Start the app: `symfony server:start`.
+4. Consume confirmation emails in a second terminal:
+
+```bash
+php bin/console messenger:consume async -vv
+```
+
+Confirmation mail is queued in `messenger_messages` and is only sent while the worker is running.
+
+## Docker Compose
 
 ```bash
 docker compose up -d --build
 ```
 
-The application is available at <http://localhost:8080> and Mailpit at <http://localhost:8025>. Mail is sent only across the Compose network to `smtp://mailer:1025`; no host SMTP service is required.
-
-Useful commands:
-
-```bash
-docker compose ps
-docker compose logs --tail=100 worker mailer
-docker compose exec app php bin/console doctrine:schema:validate
-```
-
-Create the isolated test database once, then run PHPUnit:
+The application is at <http://localhost:8080>. The Compose `worker` service consumes the mail queue. Override `MAILER_DSN` in `.env.local` / Compose env to use Gmail instead of Mailpit.
 
 ```bash
 docker compose exec -e APP_ENV=test app php bin/console doctrine:database:create --if-not-exists
@@ -28,23 +29,14 @@ docker compose exec -e APP_ENV=test app php bin/console doctrine:migrations:migr
 docker compose exec -e APP_ENV=test app php bin/phpunit
 ```
 
-## Production Compose
+## Render
 
-`compose.prod.yaml` is provider-neutral. Set these environment variables to real secret or provider values before startup:
+[`render.yaml`](render.yaml) defines a web service, a Messenger worker, and PostgreSQL.
 
-- `APP_SECRET`
-- `DATABASE_URL`
-- `MAILER_DSN`
-- `MAILER_SENDER`
-- `POSTGRES_DB`
-- `POSTGRES_USER`
-- `POSTGRES_PASSWORD`
-- optionally `APP_PORT`
+Set these on first deploy (`sync: false` in the Blueprint):
 
-Then start it with:
+- `MAILER_DSN` — Gmail SMTP with an app password
+- `MAILER_SENDER` — the same Gmail address
+- `DEFAULT_URI` — `https://<your-web-service>.onrender.com`
 
-```bash
-docker compose -f compose.prod.yaml up -d --build
-```
-
-Production SMTP credentials and database secrets must not be committed to the repository.
+Secrets must not be committed to the repository.

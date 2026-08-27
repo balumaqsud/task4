@@ -1,0 +1,3 @@
+'Invalid credentials.': 'Invalid email or password.'
+'Invalid CSRF token.': 'Your session expired. Please try signing in again.'
+'This account is blocked.': 'This account is blocked.'

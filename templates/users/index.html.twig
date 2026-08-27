@@ -5,7 +5,7 @@
     <nav class="navbar users-navbar">
         <div class="users-page-shell d-flex align-items-center justify-content-between">
             <a class="navbar-brand users-brand" href="{{ path('app_users') }}">THE APP</a>
-            <form method="post" action="{{ path('app_logout') }}">
+            <form method="post" action="{{ path('app_logout') }}" data-turbo="false">
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
                 <button class="btn btn-outline-primary users-logout" type="submit">
                     <i class="bi bi-box-arrow-right me-2" aria-hidden="true"></i>Logout
@@ -15,14 +15,7 @@
     </nav>
 
     <main class="users-page-shell users-main">
-        {% for label, messages in app.flashes %}
-            {% for message in messages %}
-                <div class="alert alert-{{ label == 'error' ? 'danger' : 'success' }} d-flex gap-2 align-items-start" role="alert">
-                    <i class="bi bi-{{ label == 'error' ? 'exclamation-circle' : 'check-circle' }}" aria-hidden="true"></i>
-                    <span>{{ message }}</span>
-                </div>
-            {% endfor %}
-        {% endfor %}
+        {% include '_flashes.html.twig' %}
 
         <form method="post" action="{{ path('app_users_actions') }}">
             <input type="hidden" name="_token" value="{{ csrf_token('bulk_user_action') }}">

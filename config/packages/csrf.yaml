@@ -5,7 +5,7 @@ framework:
             token_id: submit
 
     csrf_protection:
+        # Note: login and logout use session CSRF. Stateless double-submit cookies
+        # break the second Sign In after Turbo consumes the cookie.
         stateless_token_ids:
             - submit
-            - authenticate
-            - logout

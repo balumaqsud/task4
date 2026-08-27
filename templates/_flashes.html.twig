@@ -1,0 +1,8 @@
+{% for label, messages in app.flashes %}
+    {% for message in messages %}
+        <div class="alert alert-{{ label == 'error' ? 'danger' : (label == 'success' ? 'success' : label) }} d-flex gap-2 align-items-start" role="alert">
+            <i class="bi bi-{{ label == 'error' ? 'exclamation-circle' : 'check-circle' }}" aria-hidden="true"></i>
+            <span>{{ message }}</span>
+        </div>
+    {% endfor %}
+{% endfor %}

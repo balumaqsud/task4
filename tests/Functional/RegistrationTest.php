@@ -110,6 +110,27 @@ final class RegistrationTest extends WebTestCase
         self::assertTrue($this->passwordHasher->isPasswordValid($user, 'x'));
     }
 
+    public function testSameNameWithADifferentEmailIsAllowed(): void
+    {
+        $user = new User();
+        $user->setName('Same Name');
+        $user->setEmail('same-name-one@example.com');
+        $user->setPassword('hashed-password');
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
+
+        $crawler = $this->client->request('GET', '/register');
+        $this->client->submitForm('Register', [
+            'registration_form[name]' => 'Same Name',
+            'registration_form[email]' => 'same-name-two@example.com',
+            'registration_form[password]' => 'x',
+            'registration_form[_token]' => $crawler->filter('input[name$="[_token]"]')->attr('value'),
+        ]);
+
+        self::assertResponseRedirects('/register');
+        self::assertNotNull($this->entityManager->getRepository(User::class)->findOneBy(['email' => 'same-name-two@example.com']));
+    }
+
     public function testDuplicateEmailIsHandledByDatabaseConstraint(): void
     {
         $user = new User();

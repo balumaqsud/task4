@@ -11,14 +11,16 @@
                 <h1 class="auth-heading mb-0">Sign In to The App</h1>
             </div>
 
+            {% include '_flashes.html.twig' %}
+
             {% if error %}
                 <div class="alert alert-danger d-flex gap-2 align-items-start" role="alert">
                     <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
-                    <span>{{ error.messageKey }}</span>
+                    <span>{{ error.messageKey|trans(error.messageData, 'security') }}</span>
                 </div>
             {% endif %}
 
-            <form method="post" action="{{ path('app_login') }}">
+            <form method="post" action="{{ path('app_login') }}" data-turbo="false">
                 <div class="mb-3">
                     <label class="form-label small text-secondary" for="username">E-mail</label>
                     <div class="input-group">

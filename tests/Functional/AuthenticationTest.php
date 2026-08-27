@@ -42,6 +42,44 @@ final class AuthenticationTest extends WebTestCase
         self::assertResponseRedirects('/login');
     }
 
+    public function testRootRedirectsAnonymousUsersToLogin(): void
+    {
+        $this->client->request('GET', '/');
+
+        self::assertResponseRedirects('/login');
+    }
+
+    public function testRootRedirectsAuthenticatedUsersToTheUserTable(): void
+    {
+        $this->loginUser($this->createUser(UserStatus::ACTIVE, 'home@example.com'));
+
+        $this->client->request('GET', '/');
+
+        self::assertResponseRedirects('/users');
+    }
+
+    public function testAuthenticatedUserVisitingLoginIsRedirectedToTheUserTable(): void
+    {
+        $this->loginUser($this->createUser(UserStatus::ACTIVE, 'already-in@example.com'));
+
+        $this->client->request('GET', '/login');
+
+        self::assertResponseRedirects('/users');
+    }
+
+    public function testInvalidPasswordShowsAFriendlyError(): void
+    {
+        $user = $this->createUser(UserStatus::ACTIVE, 'wrong-password@example.com');
+
+        $this->submitLogin($user->getEmail(), 'not-the-password');
+
+        self::assertResponseRedirects('/login');
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('body', 'Invalid email or password.');
+        self::assertSelectorTextNotContains('body', 'Invalid CSRF token.');
+        self::assertSelectorTextNotContains('body', 'Invalid credentials.');
+    }
+
     public function testDirectLoginRedirectsToUserManagementAndRecordsLastLogin(): void
     {
         $user = $this->createUser(UserStatus::ACTIVE, 'direct-login@example.com');
