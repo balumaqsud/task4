@@ -4,6 +4,11 @@ set -eu
 # Important: Render's Postgres addon uses postgres://; Doctrine expects postgresql://.
 if [ -n "${DATABASE_URL:-}" ]; then
     DATABASE_URL="$(printf '%s' "$DATABASE_URL" | sed 's|^postgres://|postgresql://|')"
+    case "$DATABASE_URL" in
+        *serverVersion=*) ;;
+        *\?*) DATABASE_URL="${DATABASE_URL}&serverVersion=18&charset=utf8" ;;
+        *) DATABASE_URL="${DATABASE_URL}?serverVersion=18&charset=utf8" ;;
+    esac
     export DATABASE_URL
 fi
 
