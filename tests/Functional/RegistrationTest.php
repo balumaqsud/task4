@@ -43,6 +43,8 @@ final class RegistrationTest extends WebTestCase
         ]);
 
         self::assertResponseRedirects('/register');
+        self::assertEmailCount(1);
+        self::assertEmailAddressContains($this->getMailerMessage(), 'To', 'alice@example.com');
 
         $user = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'alice@example.com']);
         self::assertNotNull($user);

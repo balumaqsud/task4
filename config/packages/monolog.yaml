@@ -1,6 +1,7 @@
 monolog:
     channels:
         - deprecation # Deprecations are logged in the dedicated "deprecation" channel when it exists
+        - confirmation_mail
 
 when@dev:
     monolog:
@@ -52,4 +53,10 @@ when@prod:
                 type: stream
                 channels: [deprecation]
                 path: php://stderr
+                formatter: monolog.formatter.json
+            confirmation_mail:
+                type: stream
+                path: php://stderr
+                level: info
+                channels: ["confirmation_mail"]
                 formatter: monolog.formatter.json

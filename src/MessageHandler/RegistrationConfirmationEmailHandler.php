@@ -22,6 +22,7 @@ final class RegistrationConfirmationEmailHandler implements SendsRegistrationCon
         private readonly EntityManagerInterface $entityManager,
         private readonly MailerInterface $mailer,
         private readonly UrlGeneratorInterface $urlGenerator,
+        #[Autowire(service: 'monolog.logger.confirmation_mail')]
         private readonly LoggerInterface $logger,
         #[Autowire('%env(MAILER_SENDER)%')]
         private readonly string $mailerSender,
@@ -44,7 +45,7 @@ final class RegistrationConfirmationEmailHandler implements SendsRegistrationCon
         ], UrlGeneratorInterface::ABSOLUTE_URL);
 
         $email = (new TemplatedEmail())
-            ->from(Address::create($this->mailerSender))
+            ->from(Address::create(trim($this->mailerSender)))
             ->to($user->getEmail())
             ->subject('Confirm your account')
             ->htmlTemplate('registration/confirmation_email.html.twig')

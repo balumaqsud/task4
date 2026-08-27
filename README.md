@@ -8,11 +8,7 @@ Symfony 7.4 user management application for PHP 8.4.
 2. Start PostgreSQL (Docker database service is enough: `docker compose up -d database`).
 3. Start the app: `symfony server:start`.
 
-Registration queues the confirmation message, then the web process sends it after the HTTP response. Set Gmail in `.env.local` (not only `MAILER_SENDER` — `MAILER_DSN` must be a Gmail App Password). Mailpit works with `MAILER_DSN=smtp://127.0.0.1:1025`. A dedicated consumer is optional:
-
-```bash
-php bin/console messenger:consume async -vv
-```
+Registration saves the user, then **sends the confirmation email before the success redirect**. Use a Gmail App Password in `MAILER_DSN`. Mailpit works with `MAILER_DSN=smtp://127.0.0.1:1025`.
 
 ## Docker Compose
 
@@ -20,7 +16,7 @@ php bin/console messenger:consume async -vv
 docker compose up -d --build
 ```
 
-The application is at <http://localhost:8080>. The Compose `worker` service consumes the mail queue. Override `MAILER_DSN` in `.env.local` / Compose env to use Gmail instead of Mailpit.
+The application is at <http://localhost:8080>. Override `MAILER_DSN` in `.env.local` / Compose env to use Gmail instead of Mailpit.
 
 ```bash
 docker compose exec -e APP_ENV=test app php bin/console doctrine:database:create --if-not-exists
@@ -30,16 +26,14 @@ docker compose exec -e APP_ENV=test app php bin/phpunit
 
 ## Render
 
-[`render.yaml`](render.yaml) defines a free web service and PostgreSQL. Confirmation mail is queued, then sent **after the HTTP response** in the same web process. Do not run `messenger:consume` on the free web instance (it can lock the queue row and block sending).
+[`render.yaml`](render.yaml) defines a free web service and PostgreSQL.
 
 Set these on the service:
 
-- `MAILER_DSN` — `gmail+smtp://you%40gmail.com:APP_PASSWORD@default` (App Password, encode `@` as `%40`)
-- `MAILER_SENDER` — the same Gmail address (this is the From address, not the recipient)
+- `MAILER_DSN` — prefer `smtp://you%40gmail.com:APP_PASSWORD@smtp.gmail.com:465?encryption=ssl` (App Password, encode `@` as `%40`). Port 587/`tls` is often blocked from Render.
+- `MAILER_SENDER` — the same Gmail address (From, not the recipient)
 - `DEFAULT_URI` — `https://<your-web-service>.onrender.com`
 
-Confirmation mail is sent **to** the address entered on the registration form.
-
-A dedicated worker service requires a paid Render plan.
+Confirmation mail is sent **to** the address entered on the registration form. After deploy, Render logs should include `Sent registration confirmation email` or `Failed to send registration confirmation email`.
 
 Secrets must not be committed to the repository.
