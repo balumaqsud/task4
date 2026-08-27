@@ -31,12 +31,14 @@ docker compose exec -e APP_ENV=test app php bin/phpunit
 
 ## Render
 
-[`render.yaml`](render.yaml) defines a web service, a Messenger worker, and PostgreSQL.
+[`render.yaml`](render.yaml) defines a free web service and PostgreSQL. Render's free plan does not allow a separate background worker, so the web process also runs `messenger:consume` when `RUN_MESSENGER_WORKER=1`.
 
-Set these on first deploy (`sync: false` in the Blueprint):
+Set these on the service:
 
 - `MAILER_DSN` — Gmail SMTP with an app password
 - `MAILER_SENDER` — the same Gmail address
 - `DEFAULT_URI` — `https://<your-web-service>.onrender.com`
+
+A dedicated worker service requires a paid Render plan.
 
 Secrets must not be committed to the repository.

@@ -28,4 +28,11 @@ fi
 php bin/console cache:clear --no-warmup
 php bin/console doctrine:migrations:migrate --no-interaction
 chown -R www-data:www-data var/cache var/log
+
+# Nota bene: Render's free plan allows only web services, so the async mail
+# consumer can run in this process when RUN_MESSENGER_WORKER=1.
+if [ "${RUN_MESSENGER_WORKER:-0}" = "1" ]; then
+    php bin/console messenger:consume async --no-interaction --time-limit=3600 &
+fi
+
 exec apache2-foreground
