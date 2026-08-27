@@ -71,7 +71,7 @@ final class RegistrationController extends AbstractController
             $messageBus->dispatch(new RegistrationConfirmationEmail($user->getId()));
             $this->addFlash('success', 'Registration successful. Please check your email to confirm your account.');
 
-            return $this->redirectToRoute('app_register');
+            return $this->redirectToRoute('app_login');
         }
 
         return $this->render('registration/register.html.twig', ['form' => $form->createView()]);

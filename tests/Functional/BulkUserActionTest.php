@@ -176,7 +176,7 @@ final class BulkUserActionTest extends WebTestCase
             'registration_form[_token]' => $crawler->filter('input[name$="[_token]"]')->attr('value'),
         ]);
 
-        self::assertResponseRedirects('/register');
+        self::assertResponseRedirects('/login');
     }
 
     private function submitAction(string $action, array $users): void

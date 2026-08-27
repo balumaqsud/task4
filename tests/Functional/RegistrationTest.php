@@ -40,9 +40,11 @@ final class RegistrationTest extends WebTestCase
             'registration_form[_token]' => $crawler->filter('input[name$="[_token]"]')->attr('value'),
         ]);
 
-        self::assertResponseRedirects('/register');
+        self::assertResponseRedirects('/login');
         self::assertEmailCount(1);
         self::assertEmailAddressContains($this->getMailerMessage(), 'To', 'alice@example.com');
+        $client->followRedirect();
+        self::assertSelectorTextContains('.alert-success', 'Registration successful. Please check your email to confirm your account.');
 
         $user = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'alice@example.com']);
         self::assertNotNull($user);
@@ -63,7 +65,7 @@ final class RegistrationTest extends WebTestCase
             'registration_form[_token]' => $crawler->filter('input[name$="[_token]"]')->attr('value'),
         ]);
 
-        self::assertResponseRedirects('/register');
+        self::assertResponseRedirects('/login');
         self::assertEmailCount(1);
         self::assertEmailAddressContains($this->getMailerMessage(), 'To', 'dispatch@example.com');
         self::assertEmailHeaderSame($this->getMailerMessage(), 'subject', 'Confirm your account');
@@ -96,7 +98,7 @@ final class RegistrationTest extends WebTestCase
             'registration_form[_token]' => $crawler->filter('input[name$="[_token]"]')->attr('value'),
         ]);
 
-        self::assertResponseRedirects('/register');
+        self::assertResponseRedirects('/login');
         $user = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'short-password@example.com']);
         self::assertNotNull($user);
         self::assertSame(UserStatus::UNVERIFIED, $user->getStatus());
@@ -120,7 +122,7 @@ final class RegistrationTest extends WebTestCase
             'registration_form[_token]' => $crawler->filter('input[name$="[_token]"]')->attr('value'),
         ]);
 
-        self::assertResponseRedirects('/register');
+        self::assertResponseRedirects('/login');
         self::assertNotNull($this->entityManager->getRepository(User::class)->findOneBy(['email' => 'same-name-two@example.com']));
     }
 
