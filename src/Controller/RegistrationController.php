@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Entity\UserStatus;
 use App\Form\RegistrationFormType;
+use App\Mailer\PendingRegistrationConfirmations;
 use App\Message\RegistrationConfirmationEmail;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
@@ -27,6 +28,7 @@ final class RegistrationController extends AbstractController
         UserPasswordHasherInterface $passwordHasher,
         MessageBusInterface $messageBus,
         ValidatorInterface $validator,
+        PendingRegistrationConfirmations $pendingConfirmations,
     ): Response {
         $user = new User();
         $form = $this->createForm(RegistrationFormType::class, $user);
@@ -69,6 +71,7 @@ final class RegistrationController extends AbstractController
             }
 
             $messageBus->dispatch(new RegistrationConfirmationEmail($user->getId()));
+            $pendingConfirmations->add($user->getId());
             $this->addFlash('success', 'Registration successful. Please check your email to confirm your account.');
 
             return $this->redirectToRoute('app_register');

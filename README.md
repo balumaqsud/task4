@@ -30,7 +30,7 @@ docker compose exec -e APP_ENV=test app php bin/phpunit
 
 ## Render
 
-[`render.yaml`](render.yaml) defines a free web service and PostgreSQL. Confirmation mail is queued, then sent **after the HTTP response** in the same web process (free instances cannot keep a reliable extra worker). `RUN_MESSENGER_WORKER=1` is an extra consumer, not the only path.
+[`render.yaml`](render.yaml) defines a free web service and PostgreSQL. Confirmation mail is queued, then sent **after the HTTP response** in the same web process. Do not run `messenger:consume` on the free web instance (it can lock the queue row and block sending).
 
 Set these on the service:
 

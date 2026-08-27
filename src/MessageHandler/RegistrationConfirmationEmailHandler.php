@@ -16,7 +16,7 @@ use Symfony\Component\Mime\Address;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 #[AsMessageHandler]
-final class RegistrationConfirmationEmailHandler
+final class RegistrationConfirmationEmailHandler implements SendsRegistrationConfirmationEmail
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
