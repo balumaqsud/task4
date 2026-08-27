@@ -51,5 +51,9 @@ final class RegistrationConfirmationEmailHandler
             ->context(['confirmationUrl' => $confirmationUrl]);
 
         $this->mailer->send($email);
+        $this->logger->info('Sent registration confirmation email.', [
+            'userId' => $user->getId(),
+            'to' => $user->getEmail(),
+        ]);
     }
 }

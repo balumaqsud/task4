@@ -7,13 +7,12 @@ Symfony 7.4 user management application for PHP 8.4.
 1. Copy [`.env.local.example`](.env.local.example) to `.env.local` and set a Gmail app password (`MAILER_DSN`, `MAILER_SENDER`, `DEFAULT_URI`).
 2. Start PostgreSQL (Docker database service is enough: `docker compose up -d database`).
 3. Start the app: `symfony server:start`.
-4. Consume confirmation emails in a **second** terminal. Registration only queues the message; nothing is sent until this worker is running:
+
+Registration queues the confirmation message, then the web process sends it after the HTTP response. Set Gmail in `.env.local` (not only `MAILER_SENDER` — `MAILER_DSN` must be a Gmail App Password). Mailpit works with `MAILER_DSN=smtp://127.0.0.1:1025`. A dedicated consumer is optional:
 
 ```bash
 php bin/console messenger:consume async -vv
 ```
-
-Without the worker, users stay Unverified and no confirmation mail is delivered.
 
 ## Docker Compose
 
@@ -31,7 +30,7 @@ docker compose exec -e APP_ENV=test app php bin/phpunit
 
 ## Render
 
-[`render.yaml`](render.yaml) defines a free web service and PostgreSQL. Render's free plan does not allow a separate background worker, so the web process also runs `messenger:consume` when `RUN_MESSENGER_WORKER=1`.
+[`render.yaml`](render.yaml) defines a free web service and PostgreSQL. Confirmation mail is queued, then sent **after the HTTP response** in the same web process (free instances cannot keep a reliable extra worker). `RUN_MESSENGER_WORKER=1` is an extra consumer, not the only path.
 
 Set these on the service:
 
