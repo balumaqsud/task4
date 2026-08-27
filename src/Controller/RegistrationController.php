@@ -7,7 +7,6 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Entity\UserStatus;
 use App\Form\RegistrationFormType;
-use App\Mailer\RegistrationConfirmationSender;
 use App\Message\RegistrationConfirmationEmail;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
@@ -28,7 +27,6 @@ final class RegistrationController extends AbstractController
         UserPasswordHasherInterface $passwordHasher,
         MessageBusInterface $messageBus,
         ValidatorInterface $validator,
-        RegistrationConfirmationSender $confirmationSender,
     ): Response {
         $user = new User();
         $form = $this->createForm(RegistrationFormType::class, $user);
@@ -71,8 +69,6 @@ final class RegistrationController extends AbstractController
             }
 
             $messageBus->dispatch(new RegistrationConfirmationEmail($user->getId()));
-            // Nota bene: Render can freeze the process after the redirect is flushed, so SMTP must run before return.
-            $confirmationSender->send($user->getId());
             $this->addFlash('success', 'Registration successful. Please check your email to confirm your account.');
 
             return $this->redirectToRoute('app_register');

@@ -53,6 +53,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public static function getUniqIdValue(): string
     {
+        // Important: confirmation tokens must be unique per registration, not derived from email.
+        // Note: random_bytes is preferred over uniqid for an unpredictable token.
+        // Nota bene: hex encoding keeps the value URL-safe for the confirmation link.
         return bin2hex(random_bytes(16));
     }
 
@@ -162,11 +165,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->email;
     }
 
-    public function getUsername(): string
-    {
-        return $this->email;
-    }
-
     public function getRoles(): array
     {
         return ['ROLE_USER'];
@@ -174,10 +172,5 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function eraseCredentials(): void
     {
-    }
-
-    public function getSalt(): ?string
-    {
-        return null;
     }
 }

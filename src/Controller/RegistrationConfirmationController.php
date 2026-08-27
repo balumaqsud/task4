@@ -20,7 +20,9 @@ final class RegistrationConfirmationController extends AbstractController
     ): Response {
         $user = $entityManager->getRepository(User::class)->findOneBy(['verificationToken' => $token]);
         if ($user === null || $user->getVerificationTokenExpiresAt() === null || $user->getVerificationTokenExpiresAt() <= new \DateTimeImmutable()) {
-            return new Response('Invalid or expired confirmation link.', Response::HTTP_BAD_REQUEST);
+            $this->addFlash('error', 'Invalid or expired confirmation link.');
+
+            return $this->redirectToRoute('app_login');
         }
 
         if ($user->getStatus() === UserStatus::UNVERIFIED) {
@@ -31,6 +33,8 @@ final class RegistrationConfirmationController extends AbstractController
         $user->setVerificationTokenExpiresAt(null);
         $entityManager->flush();
 
-        return new Response('Your account has been confirmed.');
+        $this->addFlash('success', 'Your account has been confirmed.');
+
+        return $this->redirectToRoute('app_login');
     }
 }

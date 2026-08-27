@@ -147,7 +147,7 @@ final class BulkUserActionTest extends WebTestCase
         self::assertSame(UserStatus::BLOCKED, $this->entityManager->find(User::class, $currentUser->getId())->getStatus());
         self::assertSame(UserStatus::BLOCKED, $this->entityManager->find(User::class, $otherUser->getId())->getStatus());
 
-        $this->client->request('GET', '/protected');
+        $this->client->request('GET', '/users');
 
         self::assertResponseRedirects('/login');
     }
@@ -165,7 +165,7 @@ final class BulkUserActionTest extends WebTestCase
         self::assertNull($this->entityManager->find(User::class, $currentUser->getId()));
         self::assertNull($this->entityManager->find(User::class, $otherUser->getId()));
 
-        $this->client->request('GET', '/protected');
+        $this->client->request('GET', '/users');
         self::assertResponseRedirects('/login');
 
         $crawler = $this->client->request('GET', '/register');

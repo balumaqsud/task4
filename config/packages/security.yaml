@@ -42,7 +42,6 @@ security:
         - { path: ^/register, roles: PUBLIC_ACCESS }
         - { path: ^/login, roles: PUBLIC_ACCESS }
         - { path: ^/users, roles: ROLE_USER }
-        - { path: ^/protected, roles: ROLE_USER }
 
 when@test:
     security:

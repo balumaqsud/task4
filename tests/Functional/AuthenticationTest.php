@@ -26,11 +26,11 @@ final class AuthenticationTest extends WebTestCase
         $this->entityManager->createQuery('DELETE FROM App\\Entity\\User')->execute();
     }
 
-    public function testActiveUserCanAccessProtectedRoute(): void
+    public function testActiveUserCanAccessUserManagement(): void
     {
         $this->loginUser($this->createUser(UserStatus::ACTIVE, 'active@example.com'));
 
-        $this->client->request('GET', '/protected');
+        $this->client->request('GET', '/users');
 
         self::assertResponseIsSuccessful();
     }
@@ -95,11 +95,11 @@ final class AuthenticationTest extends WebTestCase
         self::assertNotNull($this->entityManager->find(User::class, $user->getId())?->getLastLoginAt());
     }
 
-    public function testUnverifiedUserCanAccessProtectedRoute(): void
+    public function testUnverifiedUserCanAccessUserManagement(): void
     {
         $this->loginUser($this->createUser(UserStatus::UNVERIFIED, 'unverified@example.com'));
 
-        $this->client->request('GET', '/protected');
+        $this->client->request('GET', '/users');
 
         self::assertResponseIsSuccessful();
     }
@@ -123,7 +123,7 @@ final class AuthenticationTest extends WebTestCase
         $this->client->request('POST', '/logout', ['_csrf_token' => $token]);
         self::assertResponseRedirects('/login');
 
-        $this->client->request('GET', '/protected');
+        $this->client->request('GET', '/users');
         self::assertResponseRedirects('/login');
     }
 
@@ -146,7 +146,7 @@ final class AuthenticationTest extends WebTestCase
         self::assertSelectorTextContains('body', 'This account is blocked.');
     }
 
-    public function testBlockedAuthenticatedUserIsRedirectedOnNextProtectedRequest(): void
+    public function testBlockedAuthenticatedUserIsRedirectedOnNextUserManagementRequest(): void
     {
         $user = $this->createUser(UserStatus::ACTIVE, 'becomes-blocked@example.com');
         $this->loginUser($user);
@@ -156,12 +156,12 @@ final class AuthenticationTest extends WebTestCase
         );
         $this->entityManager->clear();
 
-        $this->client->request('GET', '/protected');
+        $this->client->request('GET', '/users');
 
         self::assertResponseRedirects('/login');
     }
 
-    public function testDeletedAuthenticatedUserIsRedirectedOnNextProtectedRequest(): void
+    public function testDeletedAuthenticatedUserIsRedirectedOnNextUserManagementRequest(): void
     {
         $user = $this->createUser(UserStatus::ACTIVE, 'deleted@example.com');
         $this->loginUser($user);
@@ -169,7 +169,7 @@ final class AuthenticationTest extends WebTestCase
         $this->entityManager->remove($managedUser);
         $this->entityManager->flush();
 
-        $this->client->request('GET', '/protected');
+        $this->client->request('GET', '/users');
 
         self::assertResponseRedirects('/login');
     }
@@ -189,10 +189,8 @@ final class AuthenticationTest extends WebTestCase
 
     private function loginUser(User $user): void
     {
-        $this->client->request('GET', '/protected');
-        self::assertResponseRedirects('/login');
         $this->submitLogin($user->getEmail());
-        self::assertResponseRedirects('/protected');
+        self::assertResponseRedirects('/users');
     }
 
     private function submitLogin(string $email, string $password = 'P@ssword123'): void

@@ -24,6 +24,7 @@ final class UserChecker implements UserCheckerInterface
 
     private function rejectBlockedUser(UserInterface $user): void
     {
+        // Note: blocked accounts must not authenticate, even with a valid password.
         if ($user instanceof User && $user->getStatus() === UserStatus::BLOCKED) {
             throw new CustomUserMessageAccountStatusException('This account is blocked.');
         }

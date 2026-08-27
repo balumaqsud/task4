@@ -6,11 +6,9 @@ namespace App\Tests\Functional;
 
 use App\Entity\User;
 use App\Entity\UserStatus;
-use App\Message\RegistrationConfirmationEmail;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Component\Messenger\Transport\TransportInterface;
 
 final class RegistrationTest extends WebTestCase
 {
@@ -53,7 +51,7 @@ final class RegistrationTest extends WebTestCase
         self::assertNotSame('', (string) $user->getVerificationToken());
     }
 
-    public function testRegistrationDispatchesConfirmationMessage(): void
+    public function testRegistrationSendsConfirmationEmailThroughMessenger(): void
     {
         $client = $this->client;
         $crawler = $client->request('GET', '/register');
@@ -66,16 +64,9 @@ final class RegistrationTest extends WebTestCase
         ]);
 
         self::assertResponseRedirects('/register');
-
-        $transport = static::getContainer()->get('messenger.transport.async');
-        self::assertInstanceOf(TransportInterface::class, $transport);
-        $messages = iterator_to_array($transport->get());
-        self::assertNotEmpty($messages);
-        self::assertInstanceOf(RegistrationConfirmationEmail::class, $messages[0]->getMessage());
-
-        foreach ($messages as $envelope) {
-            $transport->ack($envelope);
-        }
+        self::assertEmailCount(1);
+        self::assertEmailAddressContains($this->getMailerMessage(), 'To', 'dispatch@example.com');
+        self::assertEmailHeaderSame($this->getMailerMessage(), 'subject', 'Confirm your account');
     }
 
     public function testEmptyPasswordIsRejected(): void

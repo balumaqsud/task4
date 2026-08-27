@@ -16,7 +16,7 @@ services:
           name: user-management-db
           property: connectionString
       - key: MESSENGER_TRANSPORT_DSN
-        value: doctrine://default?auto_setup=0
+        value: sync://
       - key: MAILER_DSN
         sync: false
       - key: MAILER_SENDER

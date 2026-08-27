@@ -29,7 +29,9 @@ final class RegistrationConfirmationTest extends WebTestCase
 
         $client->request('GET', '/register/confirm/valid-token');
 
-        self::assertResponseIsSuccessful();
+        self::assertResponseRedirects('/login');
+        $client->followRedirect();
+        self::assertSelectorTextContains('.alert-success', 'Your account has been confirmed.');
         $this->entityManager->clear();
         $confirmedUser = $this->entityManager->find(User::class, $user->getId());
         self::assertSame(UserStatus::ACTIVE, $confirmedUser->getStatus());
@@ -43,7 +45,9 @@ final class RegistrationConfirmationTest extends WebTestCase
 
         $client->request('GET', '/register/confirm/not-found');
 
-        self::assertResponseStatusCodeSame(400);
+        self::assertResponseRedirects('/login');
+        $client->followRedirect();
+        self::assertSelectorTextContains('.alert-danger', 'Invalid or expired confirmation link.');
     }
 
     public function testExpiredConfirmationTokenIsRejected(): void
@@ -52,7 +56,9 @@ final class RegistrationConfirmationTest extends WebTestCase
 
         $this->client->request('GET', '/register/confirm/expired-token');
 
-        self::assertResponseStatusCodeSame(400);
+        self::assertResponseRedirects('/login');
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.alert-danger', 'Invalid or expired confirmation link.');
     }
 
     public function testBlockedUserRemainsBlockedAfterConfirmation(): void
@@ -62,7 +68,9 @@ final class RegistrationConfirmationTest extends WebTestCase
 
         $client->request('GET', '/register/confirm/blocked-token');
 
-        self::assertResponseIsSuccessful();
+        self::assertResponseRedirects('/login');
+        $client->followRedirect();
+        self::assertSelectorTextContains('.alert-success', 'Your account has been confirmed.');
         $this->entityManager->clear();
         $blockedUser = $this->entityManager->find(User::class, $user->getId());
         self::assertSame(UserStatus::BLOCKED, $blockedUser->getStatus());

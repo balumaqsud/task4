@@ -89,6 +89,7 @@ final class UserController extends AbstractController
 
     private function validateId(mixed $id): ?int
     {
+        // Important: only positive integers may become SQL placeholders.
         if (is_int($id) && $id > 0) {
             return $id;
         }
@@ -118,6 +119,7 @@ final class UserController extends AbstractController
 
     private function placeholders(array $ids): string
     {
+        // Note: bound parameters keep bulk SQL from interpolating raw IDs.
         return implode(', ', array_fill(0, count($ids), '?'));
     }
 

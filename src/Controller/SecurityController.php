@@ -29,10 +29,4 @@ final class SecurityController extends AbstractController
     {
         throw new \LogicException('This method is intercepted by the logout firewall.');
     }
-
-    #[Route('/protected', name: 'app_protected', methods: ['GET'])]
-    public function protected(): Response
-    {
-        return new Response('Protected content.');
-    }
 }
