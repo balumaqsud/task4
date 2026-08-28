@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\User;
-use App\Entity\UserStatus;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,18 +18,13 @@ final class RegistrationConfirmationController extends AbstractController
         EntityManagerInterface $entityManager,
     ): Response {
         $user = $entityManager->getRepository(User::class)->findOneBy(['verificationToken' => $token]);
-        if ($user === null || $user->getVerificationTokenExpiresAt() === null || $user->getVerificationTokenExpiresAt() <= new \DateTimeImmutable()) {
+        if ($user === null || !$user->hasValidConfirmationLink()) {
             $this->addFlash('error', 'Invalid or expired confirmation link.');
 
             return $this->redirectToRoute('app_login');
         }
 
-        if ($user->getStatus() === UserStatus::UNVERIFIED) {
-            $user->setStatus(UserStatus::ACTIVE);
-        }
-
-        $user->setVerificationToken(null);
-        $user->setVerificationTokenExpiresAt(null);
+        $user->confirmAccount();
         $entityManager->flush();
 
         $this->addFlash('success', 'Your account has been confirmed.');

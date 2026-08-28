@@ -136,6 +136,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function hasValidConfirmationLink(): bool
+    {
+        return $this->verificationTokenExpiresAt !== null
+            && $this->verificationTokenExpiresAt > new \DateTimeImmutable();
+    }
+
+    public function confirmAccount(): void
+    {
+        if ($this->status === UserStatus::UNVERIFIED) {
+            $this->status = UserStatus::ACTIVE;
+        }
+
+        $this->verificationToken = null;
+        $this->verificationTokenExpiresAt = null;
+    }
+
     public function getLastLoginAt(): ?\DateTimeImmutable
     {
         return $this->lastLoginAt;
